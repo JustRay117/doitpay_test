@@ -56,3 +56,64 @@ resource "aws_eks_cluster" "this" {
   # Role Permissions for EKS to create cluster
   depends_on = [aws_iam_role_policy_attachment.cluster_policy]
 }
+
+# Worker nodes IAM roles
+
+# Roles for EC2 instances
+resource "aws_iam_role" "node" {
+  name = "${var.cluster_name}-node-role"
+
+  # Trust policy for EC2 instance role
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "ec2.amazonaws.com" }
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+# Allow node register to cluster
+resource "aws_iam_role_policy_attachment" "node_worker_policy" {
+  role       = aws_iam_role.node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+# Allow node to only pull container images from ECR
+resource "aws_iam_role_policy_attachment" "node_ecr_pull_policy" {
+  role       = aws_iam_role.node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
+}
+
+# Allow VPC CNI plugin to give pods an IP Address from subnets
+resource "aws_iam_role_policy_attachment" "node_cni_policy" {
+  role       = aws_iam_role.node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+}
+
+# Managed node group (worker nodes)
+resource "aws_eks_node_group" "this" {
+  cluster_name    = aws_eks_cluster.this.name
+  node_group_name = "${var.cluster_name}-nodes"
+  node_role_arn   = aws_iam_role.node.arn
+
+  # Nodes in existing private subnets doesn't have public IP address
+  subnet_ids     = var.private_subnet_ids
+  instance_types = var.node_instance_types
+
+  scaling_config {
+    desired_size = var.desired_size
+    min_size     = var.min_size
+    max_size     = var.max_size
+  }
+
+  # The role policies before nodes can join the cluster.
+  depends_on = [
+    aws_iam_role_policy_attachment.node_worker_policy,
+    aws_iam_role_policy_attachment.node_ecr_pull_policy,
+    aws_iam_role_policy_attachment.node_cni_policy,
+  ]
+}

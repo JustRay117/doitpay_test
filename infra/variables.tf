@@ -23,8 +23,18 @@ variable "private_subnet_ids" {
   type        = list(string)
 }
 
+variable "node_instance_types" {
+  description = "EC2 instance types for the worker nodes."
+  type        = list(string)
+}
+
 variable "desired_size" {
   description = "Desired number of worker nodes"
+}
+
+variable "min_size" {
+  description = "Minimum number of worker nodes."
+  type        = number
 }
 
 variable "max_size" {
