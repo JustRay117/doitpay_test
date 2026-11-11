@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: paytrack-api-config
+  namespace: paytrack
+  labels:
+    app: paytrack-api
+data:
+  APP_ENV: "sandbox"
