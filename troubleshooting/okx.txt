@@ -1,0 +1,49 @@
+Kronologi
+- 10:05 Awalnya ada versi baru dirilis.
+- 10:07:41 Readiness probe failed dengan error 5xx, yang mana service sempat menjawab koneksi, jika crash makan koneksi refused.
+- 10:07:53 Terjadi Back-off restarting failed container.
+- 10:08:04 downstream reconciliation service unavailable, kemudian server startup aborted
+- 10:08:04 server startup aborted, reports intermittent 5xx, ada request sukses & juga gagal pada user.
+
+Hipotesis
+Jadi, aplikasi versi terbaru melakukan cek ke aplikasi downstream atau yang dibutuhkan ketika startup, ketika service yang dibutuhkan tidak bisa di-reached, maka aplikasi melakukan abort, container exit, & direstart kubernetes secara loop.
+
+Meskipun pods terlihat running, tapi tulisan READY bisa terlihat 1/1 kalau benar-benar siap atau 0/1 kalau service masih belum siap atau gagal kedeploy, bisa juga dilihat dari jumlah RESTARTS, kalau banyak, berarti looping. 
+
+Pods yang gagal readiness itu seharusnya diremove dari service, & tidak ada traffic.
+Tapi masih bisa serve & user menerima error 5xx, jadi kemungkinan pods yang baru itu sudah pass readiness, kemudian gagal melakukan request karena service lain yang dibutuhkan untuk startup tidak stabil atau tidak bisa reached.
+
+Evidence yangg akan diambil:
+# 1. Cek pods yang ready atau tidak ready
+kubectl get pods -n paytrack -o wide
+kubectl get replicasets -n paytrack
+
+# 2. Cek rollout status
+kubectl rollout status -n paytrack deployment/paytrack-api --timeout=10s
+
+# 3. Cek log containers
+kubectl describe pod -n paytrack paytrack-api-xxxxxxxxxx-xxxxx
+
+# 4. Cek Logs pada container yang crash
+kubectl logs -n paytrack paytrack-api-xxxxxxxxxx-xxxxx --previous
+
+# 5. Ke pod mana Service mengirim trafik saat ini?
+kubectl -n paytrack get endpointslices -l kubernetes.io/service-name=paytrack-api
+
+# 6. Cek recent events
+kubectl -n paytrack get events --sort-by=.lastTimestamp
+
+# 7. Test healthy pod bisa reach downstream service
+kubectl -n paytrack exec <healthy-pod> -- python -c "import socket; socket.create_connection(('<downstream-host>', <port>), 3)"
+
+# 8. Cek resource usage
+kubectl -n paytrack top pods
+
+Dilakukan rollback ketika Application terbaru menampilkan error code, readiness READY 0/1, lihat log pada describe pods terjadi error ataupun pending.
+kubectl -n paytrack rollout undo deployment/paytrack-api
+
+Setelah rollback, pastikan semua pods READY 1/1, & intermittent error 5xx sudah tidak ada.
+
+Untuk pencegahan, dilakukan:
+- maxUnavailable: 0 pada deployment, sehingga tetap menyimpan pods lama sampai pods yang baru sudah ready, serta memperlama durasi minReadySeconds untuk mencegah restart looping.
+- Test pada environment yg juga memiliki downstream service.
