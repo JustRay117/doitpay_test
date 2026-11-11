@@ -81,7 +81,6 @@ Semua pengecekan berjalan secara lokal. Tidak ada akun AWS atau cluster yang dip
 
 | Hal | Status | Alasan |
 |---|---|---|
-| Workflow berjalan di GitHub Actions | Belum dijalankan saat dokumen ini ditulis. File lolos `actionlint`, dan command yang sama lolos secara lokal | Workflow baru berjalan setelah ada pull request di repository yang memuat `.github/workflows/` di root |
 | `terraform apply` dan `plan` dengan akun asli | Tidak dilakukan | Dilarang oleh asesmen, dan tidak ada kredensial |
 | Security context pada container | Rekomendasi, tidak diterapkan | Tidak diwajibkan. Saya memilih menjaga solusi tetap kecil. Tes lokal dengan Docker menunjukkan aplikasi tetap jalan sebagai user non-root dengan file system read-only, jadi risikonya rendah kalau ditambahkan nanti |
 | Otomatisasi deployment | Tidak dibuat | Opsional. Usulan singkat ada di bawah tabel ini |
