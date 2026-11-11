@@ -1,2 +1,10 @@
 docker run --rm -v "$PWD/k8s:/k8s:ro" ghcr.io/yannh/kubeconform:v0.8.0 \
   -strict -summary -verbose -kubernetes-version 1.36.0 /k8s
+
+docker build -t paytrack-api:1.0 .
+docker run -d --name paytrack-test -p 8080:8080 -e APP_ENV=sandbox paytrack-api:1.0
+curl http://localhost:8080/health
+curl http://localhost:8080/ready
+curl http://localhost:8080/
+docker logs paytrack-test
+docker rm -f paytrack-test
