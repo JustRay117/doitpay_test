@@ -8,6 +8,9 @@ provider "aws" {
       ManagedBy    = "terraform"
     }
   }
+  skip_credentials_validation = true
+  skip_requesting_account_id  = true
+  skip_metadata_api_check     = true
 }
 
 # IAM role for EKS control plane

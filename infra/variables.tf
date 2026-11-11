@@ -18,6 +18,11 @@ variable "kubernetes_version" {
   type        = string
 }
 
+variable "vpc_id" {
+  description = "ID of the existing VPC that contains the private subnets."
+  type        = string
+}
+
 variable "private_subnet_ids" {
   description = "ID of existing Private Subnets, at least 2 for EKS in different AZ"
   type        = list(string)

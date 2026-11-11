@@ -63,6 +63,9 @@ Run from this folder:
 ```bash
 terraform init -backend=false
 terraform fmt && terraform fmt -check -recursive && terraform validate
+terraform plan
+AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake \
+  terraform plan -var-file=terraform.tfvars.example
 ```
 
 | Command | What it checks |
