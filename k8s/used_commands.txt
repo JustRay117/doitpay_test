@@ -1,0 +1,2 @@
+docker run --rm -v "$PWD/k8s:/k8s:ro" ghcr.io/yannh/kubeconform:v0.8.0 \
+  -strict -summary -verbose -kubernetes-version 1.36.0 /k8s
