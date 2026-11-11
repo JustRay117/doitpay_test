@@ -1,4 +1,2 @@
-terraform fmt
-terraform fmt -check -recursive
+terraform fmt && terraform fmt -check -recursive && terraform validate
 terraform init -backend=false
-terraform validate

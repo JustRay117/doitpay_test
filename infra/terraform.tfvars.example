@@ -5,7 +5,7 @@ private_subnet_ids = [
   "subnet-REPLACE_WITH_PRIVATE_SUBNET_A",
   "subnet-REPLACE_WITH_PRIVATE_SUBNET_B"
 ]
-kubernetes_version = "REPLACE_WITH_SUPPORTED_VERSION"
+kubernetes_version = "1.36"
 node_instance_types = ["t3.medium"]
 desired_size = 2
 min_size = 2
